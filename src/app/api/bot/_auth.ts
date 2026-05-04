@@ -10,14 +10,20 @@
  */
 
 export function botAuth(req: Request): { householdId: string } | null {
-  const token = process.env.BOT_TOKEN
-  const householdId = process.env.BOT_HOUSEHOLD_ID
+  const token = (process.env.BOT_TOKEN ?? '').trim()
+  const householdId = (process.env.BOT_HOUSEHOLD_ID ?? '').trim()
 
-  if (!token || !householdId) return null
+  if (!token || !householdId) {
+    console.error('[botAuth] missing env vars: BOT_TOKEN=' + !!token + ' BOT_HOUSEHOLD_ID=' + !!householdId)
+    return null
+  }
 
   const auth = req.headers.get('authorization') ?? ''
-  const provided = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+  const provided = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
 
-  if (provided !== token) return null
+  if (provided !== token) {
+    console.error('[botAuth] token mismatch: provided=' + provided.slice(0, 4) + '*** expected=' + token.slice(0, 4) + '***')
+    return null
+  }
   return { householdId }
 }
